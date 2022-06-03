@@ -27,6 +27,8 @@ class interval:
         self.left=left
         self.right=right
         self.sym = sym
+    def __str__(self):
+        return self.sym+' freq='+str(self.freq)+' percent='+str(self.percent)+' left='+str(self.left)+' right='+str(self.right)
     def __repr__(self):
         return f"sym={self.sym}, freq={self.freq}, percent={self.percent}, left={self.left}, right={self.right};"
 #3.Создание списка
@@ -36,6 +38,8 @@ for i in range (256):
         list1.append(interval(frequencies[i], frequencies[i]/quantity, 0, 0, chr(i)))
 #4.сортировка списка по частотам, сортировка от наибольшей к наименьшей частоте
 list1 = sorted(list1, key=lambda x: x.freq, reverse=True)# сортировка списка объектов по атрибуту: freq, создается lambda-функции, которая вернет freq объекта
+# for i in list1:
+    # print(i)
 #5.функция, которая найдет объект типа interval
 def searchsymbol(sym, list1):
     for i in list1:
@@ -45,8 +49,8 @@ def searchsymbol(sym, list1):
 right=0
 for i in list1:
     i.left=right
-    right+=i.percent
-    i.right=right
+    right += i.percent
+    i.right = right
 print(list1)
 #7.Сразу запишем в файл, в котором будет закодированная информация, частоты и символы
 # way=input("Введите путь к файлу ")
@@ -57,11 +61,9 @@ print(list1)
 #     print("Неправильно был указан путь файла ")
 #     exit()
 f2=open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\encr.txt", "wb")
-f2.write(chr(4).encode('ascii'))#для фиктивных нулей (потом перпишу сюда нормальное значение)
-for i in range(256):
-    if(frequencies[i]!=0):
-        f2.write(chr(i).encode("ascii"))#символ
-        f2.write(str(frequencies[i]).encode("ascii"))#частота, соответствующая символу
+for i in list1:
+        f2.write(i.sym.encode("ascii"))#символ
+        f2.write(str(i.freq).encode("ascii"))#частота, соответствующая символу
         f2.write(chr(2).encode("ascii"))#разделитель между символами с частотами
 f2.write(chr(3).encode("ascii"))#разделитель между сообщением, которое кодировали и между символами с частотами
 #8.Основная функция, будем стараться закодировать 5 символов в 4-х байтах
@@ -72,34 +74,40 @@ obj = searchsymbol(sym, list1)
 while sym != '':
     #проверку бы еще если break внутри сработал, еще проверка на нули фиктивные
     #получаем промежуток, с которым потом будем работать
-    for i in range (l):
+    for i in range(l):
         leftward = left
         left = left+(right-left)*obj.left
         right = leftward+(right-leftward)*obj.right
-        # print(left, right)
+        print('====', left, right)
         sym = f.read(1)
-        obj = searchsymbol(sym, list1)
         if sym == '':
             break
+        obj = searchsymbol(sym, list1)
+        # print(obj)
     bits = 0
-    i = 0
+    i = 1
     cont = 0
     #берем самую левую точку, которая входит в промежуток [left, right)
     while True:
         if cont >= left and cont < right:#входит в промежуток
-            bits << 32-i
-            for i in range(l):
-                d = 2 ** 8 - 1
-                d = d & (bits << 32 - i*8)#!!!!!!!!!сомнительная строчка
-                f2.write(chr(d).encode("ascii"))
+            bits = bits << 33-i
+            for i in range(4):#!!!!!4 байта задействовано
+                d = 255
+                # to_bytes
+                d = d & (bits >> 24 - i*8)
+                f2.write(d.to_bytes(1, byteorder='little'))
+            # print(bits)
             break
         bits = bits << 1
-        # print(bits+1/(2**i),right)
         if (cont + (1/(2**i))) < right:
             bits = bits | 1
             cont += (1/(2**i))
         i += 1
+    print(cont)
+    left = 0
+    right = 1
     print(bits)
+#!!!!!!!еще надо фиктивные нули в конец записать
 f.close()
 f2.close()
 #подсчёт сжатия
