@@ -14,7 +14,6 @@ class interval:
 #2.считка символов и соответвующих им частот
 f = open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\encr.txt", "rb")
 quantity = 0
-l=5
 accum2=''#записываем частоту
 list1=[]
 accum1=''#записываем символ
@@ -31,7 +30,6 @@ while sym != chr(3):
     quantity += int(accum2)#подсчет общего кол-ва символов в тексте
     list1.append(interval(int(accum2), 0, 0, 0, accum1))
     accum2 = ''
-# list1 = sorted(list1, key=lambda x: x.freq, reverse=True)
 #3.запись значений percent, left и right
 right = 0
 for i in list1:
@@ -42,41 +40,60 @@ for i in list1:
 
 print(list1)
 #4.основной цикл для раскодирования
-f2=open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\decr.txt", "w")
-#!!!!!еще в конце от quantity до '' считать надо бы фиктивные нули
-
-for i in range(int((quantity-1)/l+1)):
+f2 = open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\decr.txt", "w")
+chet = 0
+d = True
+while d:
     bits = 0
     #набираем 4 байта
     for j in range(4):
-        #int.from_bytes(sym, 'little')
         sym = f.read(1)
         sym = int.from_bytes(sym, 'little')
         bits = bits << 8
         bits = bits | sym
     cont = 0
     mask = 1 << 31
+    # находим двоичную дробь
     for z in range(1, 33):
         if mask & bits != 0:
             cont += 1/(2**z)
         mask = mask >> 1
     # print(cont)
-    exitFlag=False
-    for i in range(l):
-        for m in list1:
-            if cont >= m.left and cont < m.right:
-                f2.write(m.sym)
-                quantity-=1
-                if quantity==0:
-                    exitFlag=True
-                    break
-                cont = (cont-m.left)/(m.right-m.left)
-                # print (cont)
+    c = True
+    # print(list1)
+    left = 0
+    right = 1
+    print(cont)
+    while c:
+        #print(cont)
+        for i in list1:
+            if i.right > cont and i.left <= cont:
+                # print("1")
+                leftward = left
+                left = left + (right - left) * i.left
+                right = leftward + (right - leftward) * i.right
+                if right-left > 1/2**32:
+                    f2.write(i.sym)
+                    print(i.sym, left, right)
+                    chet += 1
+                    if quantity == chet:
+                        c = False
+                        d = False
+                    cont = (cont - i.left) / (i.right - i.left)
+                else:
+                    c = False
                 break
-        if exitFlag:
-            break
-
-    # print(bits, cont)
-
 f.close()
 f2.close()
+
+
+#сравнение файлов
+f1=open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\new.txt", 'r')
+f2=open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\decr.txt", 'r')
+sym1=f1.read(1)
+sym2=f2.read(1)
+while sym1 != '' or sym2!='':
+    if sym1 != sym2:
+        print("Файлы были не равны")
+        exit()
+print("Файлы были равны ")

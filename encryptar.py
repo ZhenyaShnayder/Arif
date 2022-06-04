@@ -1,6 +1,5 @@
 import os
 # t=input("Введите путь к файлу ")
-l=5#количество вложений
 # C:\\Users\\днс\\OneDrive\\Рабочий стол\\new.txt
 # try:
 #     f=open(t, "r")
@@ -38,8 +37,6 @@ for i in range (256):
         list1.append(interval(frequencies[i], frequencies[i]/quantity, 0, 0, chr(i)))
 #4.сортировка списка по частотам, сортировка от наибольшей к наименьшей частоте
 list1 = sorted(list1, key=lambda x: x.freq, reverse=True)# сортировка списка объектов по атрибуту: freq, создается lambda-функции, которая вернет freq объекта
-# for i in list1:
-    # print(i)
 #5.функция, которая найдет объект типа interval
 def searchsymbol(sym, list1):
     for i in list1:
@@ -67,50 +64,46 @@ for i in list1:
         f2.write(chr(2).encode("ascii"))#разделитель между символами с частотами
 f2.write(chr(3).encode("ascii"))#разделитель между сообщением, которое кодировали и между символами с частотами
 #8.Основная функция, будем стараться закодировать 5 символов в 4-х байтах
-left=0
-right=1
+flag = True
 sym = f.read(1)
-obj = searchsymbol(sym, list1)
-while sym != '':
-    #проверку бы еще если break внутри сработал, еще проверка на нули фиктивные
+while flag:
+    left = 0
+    right = 1
     #получаем промежуток, с которым потом будем работать
-    for i in range(l):
-        leftward = left
-        left = left+(right-left)*obj.left
-        right = leftward+(right-leftward)*obj.right
-        print('====', left, right)
-        sym = f.read(1)
-        if sym == '':
-            break
+    l = 0
+    while True:
         obj = searchsymbol(sym, list1)
-        # print(obj)
+        leftward = left
+        left2 = left + (right - left) * obj.left
+        right2 = leftward + (right - leftward) * obj.right
+        if (right2-left2) > 1/2**32:
+            # print(sym, left2, right2)
+            sym = f.read(1)
+            left = left2
+            right = right2
+            if sym == '':
+                flag = False
+                break
+        else:
+            break
+    # print("+")
     bits = 0
     i = 1
     cont = 0
-    #берем самую левую точку, которая входит в промежуток [left, right)
-    while True:
-        if cont >= left and cont < right:#входит в промежуток
-            bits = bits << 33-i
-            for i in range(4):#!!!!!4 байта задействовано
-                d = 255
-                # to_bytes
-                d = d & (bits >> 24 - i*8)
-                f2.write(d.to_bytes(1, byteorder='little'))
-            # print(bits)
-            break
+    #берем точку, которая входит в промежуток [left, right)
+    for i in range(1, 33):
         bits = bits << 1
-        if (cont + (1/(2**i))) < right:
+        if cont+1/2**i < right:
+            cont += 1/2**i
             bits = bits | 1
-            cont += (1/(2**i))
-        i += 1
-    print(cont)
-    left = 0
-    right = 1
-    print(bits)
-#!!!!!!!еще надо фиктивные нули в конец записать
+    # print(cont)
+    for i in range(4):
+        d = 255
+        d = d & (bits >> 24 - i*8)
+        f2.write(d.to_bytes(1, byteorder='little'))
 f.close()
 f2.close()
 #подсчёт сжатия
 a = os.stat("C:\\Users\\днс\\OneDrive\\Рабочий стол\\new.txt").st_size
 b = os.stat("C:\\Users\\днс\\OneDrive\\Рабочий стол\\encr.txt").st_size
-print(f"Сжатие: {(b/a)*100}%")
+print(f"Сжатие: {(b/a)*100} %")
