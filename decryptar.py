@@ -58,23 +58,17 @@ while d:
         if mask & bits != 0:
             cont += 1/(2**z)
         mask = mask >> 1
-    # print(cont)
     c = True
-    # print(list1)
     left = 0
     right = 1
-    print(cont)
     while c:
-        #print(cont)
         for i in list1:
             if i.right > cont and i.left <= cont:
-                # print("1")
                 leftward = left
                 left = left + (right - left) * i.left
                 right = leftward + (right - leftward) * i.right
                 if right-left > 1/2**32:
                     f2.write(i.sym)
-                    print(i.sym, left, right)
                     chet += 1
                     if quantity == chet:
                         c = False
@@ -88,12 +82,21 @@ f2.close()
 
 
 #сравнение файлов
-f1=open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\new.txt", 'r')
-f2=open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\decr.txt", 'r')
-sym1=f1.read(1)
-sym2=f2.read(1)
-while sym1 != '' or sym2!='':
-    if sym1 != sym2:
-        print("Файлы были не равны")
-        exit()
-print("Файлы были равны ")
+f1 = open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\new.txt", 'r')
+f2 = open("C:\\Users\\днс\\OneDrive\\Рабочий стол\\decr.txt", 'r')
+sym1 = f1.read(1)
+sym2 = f2.read(1)
+while sym1!='':
+    if sym1!=sym2:
+        print("Файлы были разные. ")
+        f1.close()
+        f2.close()
+        exit ()
+    sym1 = f1.read(1)
+    sym2 = f2.read(1)
+if sym2!='':
+    print("Файлы были разные ")
+else:
+    print("Файлы были одинаковые ")
+f1.close()
+f2.close()
